@@ -1,0 +1,220 @@
+@page
+@model LeagueInfo.Pages.PlayerStatsModel
+@{
+    ViewData["Title"] = "Statystyki Gracza";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Statystyki Gracza</title>
+    <link rel="stylesheet" href="/css/playerstats-style.css">
+</head>
+<body>
+    <div style="text-align: center; margin-top: 20px;">
+        <a href="/Index">
+            <button>
+                Wróć na stronę główną
+            </button>
+        </a>
+    </div>
+    <h1>Statystyki Gracza</h1>
+    <div class="stats">
+
+        <div class="player-main-info">
+            <p class="nickname">@Model.GameName#@Model.TagLine</p>
+            <p class="level">Poziom: @Model.SummonerLevel.ToString("N0")</p>
+        </div>
+
+    <!-- !!! !!! !!!-->
+    <!-- FRAGMENT ZE TOP 5 CHAMPIONÓW GRACZA-->
+    <h2 style="text-align: center; text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.7);">Top 5 Championów</h2>
+    @if (Model.ChampionMastery != null && Model.ChampionMastery.Any())
+    {
+        <div class="champion-mastery">
+            @foreach (var champ in Model.ChampionMastery)
+            {
+                <div class="champion-item">
+                    <img src="@($"https://ddragon.leagueoflegends.com/cdn/14.1.1/img/champion/{champ.ChampionName}.png")" 
+                        alt="@champ.ChampionName">
+                    <p>@champ.ChampionName</p>
+                    <p>Poziom: @champ.ChampionLevel</p>
+                    <p>Punkty: @champ.ChampionPoints.ToString("N0")</p>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+    <p class="no-data-about">Brak danych o mistrzostwie bohaterów.</p>
+    }
+
+    <!-- !!! !!! !!!-->
+    <!-- FRAGMENT Z PODZIAŁEM LINII I STATYSTYKAMI GRACZA-->
+    <div class="lane-and-achievements">
+        <!-- Kolumna z liniami -->
+        <div class="lane-column">
+            <h2>Rozkład Gier na Liniach</h2>
+            @if (Model.LaneDistribution != null && Model.LaneDistribution.Any())
+            {
+                <div class="lane-list">
+                    @foreach (var lane in Model.LaneDistribution)
+                    {
+                        <div class="lane-row">
+                            <div class="lane-name">@lane.Key</div>
+                            <div class="lane-percentage">@lane.Value%</div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <p class="no-data-about">Brak danych o rozkładzie gier na liniach.</p>
+            }
+        </div>
+
+        <!-- Kolumna z osiągnięciami -->
+        <div class="achievements-column">
+            <h2>Osiągnięcia Gracza</h2>
+            @if (Model.Achievements != null)
+            {
+                <div class="achievement">
+                    <span class="achievement-title">Maksymalna ilość zabójstw:</span>
+                    <span class="achievement-value">@Model.Achievements.MaxKills</span>
+                </div>
+                <div class="achievement">
+                    <span class="achievement-title">Maksymalna ilość asyst:</span>
+                    <span class="achievement-value">@Model.Achievements.MaxAssists</span>
+                </div>
+                <div class="achievement">
+                    <span class="achievement-title">Maksymalne Obrażenia:</span>
+                    <span class="achievement-value">@Model.Achievements.MaxDamageDealt.ToString("N0")</span>
+                </div>
+                <div class="achievement">
+                    <span class="achievement-title">Maksymalna ilość minionów:</span>
+                    <span class="achievement-value">@Model.Achievements.MaxCS</span>
+                </div>
+                <div class="achievement">
+                    <span class="achievement-title">Najlepsze KDA:</span>
+                    <span class="achievement-value">@Model.Achievements.BestKDA</span>
+                </div>
+            }
+            else
+            {
+                <p class="no-data-about">Brak danych o osiągnięciach gracza.</p>
+            }
+        </div>
+    </div>
+
+    <!-- !!! !!! !!!-->
+    <!-- FRAGMENT ZE STATYSTYKAMI RANKINGOWYMI GRACZA-->
+    <h2 style="text-align: center; text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.7);">Statystyki Rankingowe</h2>
+    @if (Model.RankedStats != null && Model.RankedStats.Any())
+    {
+    <div class="ranked-stats-container">
+        @foreach (var stat in Model.RankedStats)
+        {
+            <div class="ranked-card">
+                <div class="ranked-header">
+                    <img src="@stat.IconUrl" alt="@stat.Tier" class="rank-icon"/>
+                    <span>
+                        @(
+                            stat.QueueType == "RANKED_SOLO_5x5" ? "SOLO/DUO" : 
+                            stat.QueueType == "RANKED_FLEX_SR" ? "FLEX" : 
+                            stat.QueueType
+                        )
+                    </span>
+                </div>
+                <div class="ranked-body">
+                    <p><strong>Tier:</strong> @($"{stat.Tier} {stat.Rank}")</p>
+                    <p><strong>LP:</strong> @stat.LeaguePoints</p>
+                    <p><strong>Wygrane:</strong> @stat.Wins</p>
+                    <p><strong>Przegrane:</strong> @stat.Losses</p>
+                </div>
+            </div>
+        }
+    </div>
+    }
+    else
+    {
+        <p class="no-data-about">Brak danych rankingowych.</p>
+    }
+
+    <!-- !!! !!! !!!-->
+    <!-- FRAGMENT Z HISTORIA MECZÓW GRACZA-->
+    <h2>Historia Gier</h2>
+    @if (Model.MatchHistory != null && Model.MatchHistory.Any())
+    {
+        <div class="match-history-container">
+            @foreach (var match in Model.MatchHistory)
+            {
+                <div class="match-card @(match.Info.Participants.FirstOrDefault(p => p.Puuid == Model.Puuid)?.Win == true ? "win" : "lose")">
+                    <div class="match-details">
+                        <div class="game-info"><strong>@match.Info.GameMode</strong> <span>&nbsp;&nbsp;</span> @TimeSpan.FromSeconds(match.Info.GameDuration).ToString(@"mm\:ss")</div>
+                        <div class="player-info">
+                            <img src="@($"https://ddragon.leagueoflegends.com/cdn/14.1.1/img/champion/{match.Info.Participants.FirstOrDefault(p => p.Puuid == Model.Puuid)?.ChampionName}.png")" 
+                                alt="Champion Icon" class="champion-icon" />
+                            <div class="player-stats">
+                                <p><strong>KDA:</strong> @(
+                                    match.Info.Participants.FirstOrDefault(p => p.Puuid == Model.Puuid)?.Deaths == 0 
+                                    ? Math.Round(
+                                        (double)(
+                                            (match.Info.Participants.FirstOrDefault(p => p.Puuid == Model.Puuid)?.Kills ?? 0) +
+                                            (match.Info.Participants.FirstOrDefault(p => p.Puuid == Model.Puuid)?.Assists ?? 0)
+                                        ))
+                                    : Math.Round(
+                                        (double)(
+                                            (match.Info.Participants.FirstOrDefault(p => p.Puuid == Model.Puuid)?.Kills ?? 0) +
+                                            (match.Info.Participants.FirstOrDefault(p => p.Puuid == Model.Puuid)?.Assists ?? 0)
+                                        ) / (match.Info.Participants.FirstOrDefault(p => p.Puuid == Model.Puuid)?.Deaths ?? 1), 2)
+                                )</p>
+                                <p><strong>Zabójstwa/Śmierci/Asysty:</strong> @match.Info.Participants.FirstOrDefault(p => p.Puuid == Model.Puuid)?.Kills /
+                                    @match.Info.Participants.FirstOrDefault(p => p.Puuid == Model.Puuid)?.Deaths /
+                                    @match.Info.Participants.FirstOrDefault(p => p.Puuid == Model.Puuid)?.Assists
+                                </p>
+                                <p><strong>Zabite miniony:</strong> @(
+                                    match.Info.Participants.FirstOrDefault(p => p.Puuid == Model.Puuid)?.TotalMinionsKilled +
+                                    match.Info.Participants.FirstOrDefault(p => p.Puuid == Model.Puuid)?.NeutralMinionsKilled
+                                )</p>
+                                <p><strong>Zadane obrażenia:</strong> @match.Info.Participants.FirstOrDefault(p => p.Puuid == Model.Puuid)?.TotalDamageDealtToChampions.ToString("N0")</p>
+                            </div>
+                        </div>
+                            <div class="team-info">
+                                <div class="team-column">
+                                    <h4>Przegrana</h4>
+                                    @foreach (var player in match.Info.Participants.Where(p => !p.Win))
+                                    {
+                                        <div class="team-player">
+                                            <img src="@($"https://ddragon.leagueoflegends.com/cdn/14.1.1/img/champion/{player.ChampionName}.png")" alt="Champion Icon" class="small-champion-icon" />
+                                            <span>@(string.IsNullOrWhiteSpace(player.SummonerName) ? "Nieznany" : player.SummonerName)</span>
+                                            <span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                                            <span class="other-player-stats">@player.Kills / @player.Deaths / @player.Assists</span>
+                                        </div>
+                                    }
+                                </div>
+                                <div class="team-column">
+                                    <h4>Wygrana</h4>
+                                    @foreach (var player in match.Info.Participants.Where(p => p.Win))
+                                    {
+                                        <div class="team-player">
+                                            <img src="@($"https://ddragon.leagueoflegends.com/cdn/14.1.1/img/champion/{player.ChampionName}.png")" alt="Champion Icon" class="small-champion-icon" />
+                                            <span>@(string.IsNullOrWhiteSpace(player.SummonerName) ? "Nieznany" : player.SummonerName)</span>
+                                            <span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                                            <span class="other-player-stats">@player.Kills / @player.Deaths / @player.Assists</span>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <p class="no-data-about">Brak danych o historii gier.</p>
+    }
+</body>
+</html>
